@@ -13,6 +13,7 @@ copy-pasted hacks from 2015.
 [![Baseline-aware](https://img.shields.io/badge/Baseline-aware-success.svg)](https://web.dev/baseline)
 [![Agent Skill](https://img.shields.io/badge/format-SKILL.md-7c3aed.svg)](https://developers.openai.com/codex/skills)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
+[![Maintained by Pythoughts](https://img.shields.io/badge/maintained%20by-Pythoughts-0b7285.svg)](https://github.com/Pythoughts-labs)
 
 </div>
 
@@ -174,9 +175,10 @@ source) so the file stays verifiable. Keep the evergreen tips evergreen — if a
 superseded by a native feature, add it to the "Modernize older tips" section rather than
 deleting the original.
 
-## Author
+## Author & maintainer
 
-**Mohamed Elkholy** — [@mohamed-elkholy95](https://github.com/mohamed-elkholy95)
+Created by **Mohamed Elkholy** — [@mohamed-elkholy95](https://github.com/mohamed-elkholy95).
+Maintained under [**Pythoughts**](https://github.com/Pythoughts-labs).
 
 ## License
 
