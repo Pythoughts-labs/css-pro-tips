@@ -1,0 +1,36 @@
+{
+  "name": "css-pro-tips",
+  "version": "1.0.0",
+  "description": "A validated, Baseline-aware modern CSS design-system skill for AI coding agents (Claude Code, Codex, Cursor, Pi, OpenCode, Kiro, and any SKILL.md-compatible agent).",
+  "keywords": [
+    "css",
+    "agent-skill",
+    "skill",
+    "claude-code",
+    "codex",
+    "cursor",
+    "opencode",
+    "design-system",
+    "baseline",
+    "container-queries",
+    "modern-css",
+    "css-tips",
+    "ai-agents"
+  ],
+  "author": "Mohamed Elkholy",
+  "license": "MIT",
+  "homepage": "https://github.com/Pythoughts-labs/css-pro-tips#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pythoughts-labs/css-pro-tips.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pythoughts-labs/css-pro-tips/issues"
+  },
+  "files": [
+    "SKILL.md",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
+}
