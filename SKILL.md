@@ -1,15 +1,48 @@
 ---
 name: css-protips
-description: A reference of practical, modern CSS techniques. Use when writing, reviewing, or refactoring CSS/Tailwind and you want idiomatic patterns — resets, box-sizing inheritance, vertical centering, aspect-ratio, :is()/:not() selectors, logical properties, and other pro tips. Includes a Modern CSS section bucketed by MDN Baseline (Widely available / Newly available / Limited) plus progressive-enhancement guidance (@supports). Baseline is a browser-compatibility signal only — still test accessibility, keyboard behavior, motion preferences, and contrast separately.
+description: Use when writing, reviewing, refactoring, or modernizing CSS/Tailwind with source-validated patterns for resets, box sizing, focus styles, centering, aspect ratios, selectors, layout, modern CSS, progressive enhancement, older-pattern modernization, MDN Baseline support buckets, @property, container units, popovers, View Transitions, custom highlights, and scroll-state queries.
 ---
 
-# CSS Protips
+# CSS Protips — Validated Skill
 
-A collection of tips to help take your CSS skills pro. Each entry is a self-contained pattern — apply the one that fits the problem in front of you.
+This skill is a source-validated update of the uploaded `css-protips` Markdown skill. It keeps the useful practical guidance, corrects current compatibility status where needed, adds explicit references for each claim, and now includes an expanded set of modern CSS tricks validated against MDN/web platform references.
 
-### Use a CSS Reset
+## How to use this skill
 
-CSS resets help enforce style consistency across different browsers with a clean slate for styling elements. There are plenty of reset patterns to find, or you can use a more simplified reset approach:
+Use this skill when writing, reviewing, or modernizing CSS. Prefer the “Validated patterns” section for day-to-day code. Use the “Modern CSS support buckets” section when deciding whether a feature can ship as normal production CSS or should be guarded with `@supports`. Use the “Retire or modernize older tips” section when replacing older CSS tricks with current native features.
+
+## Validation rules used
+
+1. **Compatibility language is source-bound.** “Widely available,” “Newly available,” and “Limited availability” follow MDN Baseline definitions unless a different source is named.
+2. **Baseline is not QA.** Baseline says whether a web platform feature is broadly implemented across core browsers; it does not replace accessibility, keyboard, contrast, motion, performance, or project-specific testing.
+3. **Progressive enhancement is required for limited or audience-dependent features.** If browser support is incomplete for your audience, ship a working fallback first, then add the enhanced rule with `@supports`.
+4. **Do not turn tips into global rules blindly.** Global selectors such as `:empty`, `* + *`, or blanket resets can affect third-party widgets, CMS content, accessibility, or embedded components. Scope them unless the whole project explicitly opts in.
+
+References: [MDN Baseline][ref-baseline], [MDN @supports][ref-supports].
+
+---
+
+# Key corrections from the uploaded skill
+
+| Area | Validated decision | Why |
+|---|---|---|
+| Baseline meaning | Keep the caveat. Baseline is a browser-compatibility signal only, not an accessibility/performance/QA guarantee. | MDN Baseline defines support buckets and explicitly says Baseline is not a substitute for accessibility, performance, and other tests. [MDN Baseline][ref-baseline] |
+| Anchor positioning | Update from “Limited availability” to **Baseline 2026 Newly available** for core properties such as `anchor-name`, `position-area`, and `position-try-fallbacks`; still verify support floor and keep fallbacks for older audiences. | MDN now marks key anchor-positioning properties as Baseline 2026 Newly available. [MDN anchor-name][ref-anchor-name], [MDN position-area][ref-position-area], [MDN position-try-fallbacks][ref-position-try-fallbacks] |
+| `field-sizing` | Update from “Limited availability” to **Baseline 2026 Newly available**; still use a fallback if your browser floor includes older browsers. | MDN marks `field-sizing` as Baseline 2026 Newly available. [MDN field-sizing][ref-field-sizing] |
+| `accent-color` | Keep as **Limited availability**. Use as a progressive enhancement, not as the only brand-control styling mechanism. | MDN marks `accent-color` Limited availability. [MDN accent-color][ref-accent-color] |
+| Scroll-driven animations | Keep as **progressive enhancement**. `animation-timeline` remains Limited availability. | MDN marks `animation-timeline` Limited availability. [MDN animation-timeline][ref-animation-timeline] |
+| `interpolate-size` / `calc-size()` | Keep as progressive enhancement. Do not treat native `height: auto` interpolation as Baseline. | MDN marks `interpolate-size` and `calc-size()` Limited availability/experimental. [MDN interpolate-size][ref-interpolate-size], [MDN calc-size][ref-calc-size] |
+| `transition-behavior` | Use it for discrete transitions such as `display`; it does **not** by itself interpolate `height: 0` to `height: auto`. | MDN defines `transition-behavior` as enabling transitions for discrete animation properties. [MDN transition-behavior][ref-transition-behavior] |
+| Generated-content commas/empty-link URLs | Keep only with accessibility/copy-paste caveats. Generated text from `content` may not behave like real DOM text. | MDN documents generated/replaced content and the `attr()` function, including accessibility-oriented alt text syntax. [MDN content][ref-content] |
+| Native CSS nesting | Keep for modern evergreen projects after checking support floor. Can I use shows broad but not universal support; MDN confirms browser-native parsing, not preprocessor compilation. | [Can I use CSS nesting][ref-caniuse-nesting], [MDN CSS nesting][ref-nesting] |
+
+---
+
+# Validated patterns
+
+## 1. Use a CSS reset deliberately
+
+A minimal reset can remove browser-default margin/padding and make layout more predictable. Prefer a project-owned reset rather than copy-pasting an aggressive global reset blindly.
 
 ```css
 *,
@@ -21,16 +54,11 @@ CSS resets help enforce style consistency across different browsers with a clean
 }
 ```
 
-Now elements will be stripped of margins and padding, and `box-sizing` lets you manage layouts with the CSS box model.
+Validation: `box-sizing` is a widely available property. `border-box` makes the declared width/height include padding and border, which usually makes component sizing easier. [MDN box-sizing][ref-box-sizing]
 
+## 2. Inherit `box-sizing` when components may need overrides
 
-> [!TIP]
-> If you follow the [Inherit `box-sizing`](#inherit-box-sizing) tip below you might opt to not include the `box-sizing` property in your CSS reset.
-
-
-### Inherit `box-sizing`
-
-Let `box-sizing` be inherited from `html`:
+This variant sets the root sizing model once, then lets components inherit it.
 
 ```css
 html {
@@ -44,30 +72,11 @@ html {
 }
 ```
 
-This makes it easier to change `box-sizing` in plugins or other components that leverage other behavior.
+Validation: `box-sizing` supports `content-box` and `border-box`; inheriting from `html` is a safe pattern when a component needs to override sizing context locally. [MDN box-sizing][ref-box-sizing]
 
-#### [Demo](https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/)
+## 3. Use `all: unset` carefully for component resets
 
-
-### Use `all: unset` Carefully for Component Resets
-
-When resetting an element's properties, you can reset each property individually:
-
-```css
-button {
-  background: none;
-  border: none;
-  color: inherit;
-  font: inherit;
-  outline: none;
-  padding: 0;
-}
-```
-
-Or use the `all` shorthand with `unset`. **`all: unset` resets almost every property** (except
-`unicode-bidi`, `direction`, and custom properties) — inherited props revert to inherit, others to
-initial. A `<button>` becomes `display: inline` and loses its native box, so always restore layout
-and focus after unsetting.
+`all: unset` resets almost all CSS properties. It excludes `unicode-bidi`, `direction`, and custom properties. Because non-inherited properties go to their initial values, a button can lose its native display/box behavior. Restore layout and focus styles explicitly.
 
 ```css
 button.reset {
@@ -84,66 +93,30 @@ button.reset:focus-visible {
 }
 ```
 
-> [!TIP]
-> To restore the user-agent stylesheet instead of a blank slate, use `all: revert` — see
-> [Reset intent: `unset` vs `revert`](#reset-intent-unset-vs-revert) in the Modern CSS section.
+Use `all: revert` when the intent is “undo author styles and return toward UA/user defaults,” not “strip everything to a blank slate.”
 
+Validation: MDN documents that `all` resets all properties except `unicode-bidi`, `direction`, and CSS custom properties. [MDN all][ref-all]
 
-### Use `:not()` to Apply/Unapply Borders on Navigation
+## 4. Prefer `:focus-visible` for keyboard focus styles
 
-Instead of putting on the border...
+Use `:focus-visible` so keyboard users keep a visible focus indicator without forcing the same ring on every pointer click.
 
 ```css
-/* add border */
-.nav li {
-  border-right: 1px solid #666;
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 0.15em;
 }
 ```
 
-...and then taking it off the last element...
+Validation: MDN describes `:focus-visible` as matching when the user agent determines that focus should be made evident, and notes that people need to know which element has focus. [MDN :focus-visible][ref-focus-visible]
 
-```css
-/* remove border */
-.nav li:last-child {
-  border-right: none;
-}
-```
+## 5. Add unitless `line-height` to text containers
 
-...use the `:not()` pseudo-class to only apply to the elements you want:
-
-```css
-.nav li:not(:last-child) {
-  border-right: 1px solid #666;
-}
-```
-
-Here, the CSS selector is read as a human would describe it.
-
-
-
-### Check if Font Is Installed Locally
-
-You can check if a font is installed locally before fetching it remotely, which is a good performance tip, too.
-
-```css
-@font-face {
-  font-family: "Dank Mono";
-  src:
-    /* Full name */ local("Dank Mono"), /* Postscript name */ local("Dank Mono"),
-    /* Otherwise, download it! */ url("//...a.server/fonts/DankMono.woff");
-}
-
-code {
-  font-family: "Dank Mono", system-ui-monospace;
-}
-```
-
-H/T to Adam Argyle for sharing this protip and [demo](https://codepen.io/argyleink/pen/VwYJpgR).
-
-
-### Add `line-height` to `body`
-
-You don't need to add `line-height` to each `<p>`, `<h*>`, _et al_. separately. Instead, add it to `body`:
+Set a readable unitless line height on `body` or on text-heavy containers.
 
 ```css
 body {
@@ -151,36 +124,11 @@ body {
 }
 ```
 
-This way textual elements can inherit from `body` easily.
+Validation: `line-height` sets the height of a line box, and MDN recommends unitless values because descendants inherit the number rather than a computed fixed length. [MDN line-height][ref-line-height]
 
+## 6. Center with Grid or Flexbox
 
-
-### Set `:focus` for Form Elements
-
-Sighted keyboard users rely on focus to determine where keyboard events go in the page. Make focus for form elements stand out and consistent than a browser's default implementation:
-
-```css
-a:focus,
-button:focus,
-input:focus,
-select:focus,
-textarea:focus {
-  box-shadow: none;
-  outline: #000 dotted 2px;
-  outline-offset: 0.05em;
-}
-```
-
-
-> [!TIP]
-> In modern code, prefer [`:focus-visible`](#prefer-focus-visible-over-focus) so keyboard users keep
-> a clear focus ring without showing focus styles on every mouse click.
-
-
-### Vertically-Center Anything
-
-Prefer **Grid** with a dynamic viewport unit on mobile — `100vh` maps to the large viewport and can
-misbehave when browser toolbars show/hide. With logical properties, use `100dvb` (dynamic viewport block).
+For page-level centering, Grid is concise. Use dynamic viewport block units on mobile when browser toolbars matter.
 
 ```css
 .center-page {
@@ -190,399 +138,240 @@ misbehave when browser toolbars show/hide. With logical properties, use `100dvb`
 }
 ```
 
-Flexbox works the same way once the parent has a defined block size:
+For flex layouts, set the container’s size and center on both axes.
 
 ```css
-html,
-body {
-  min-block-size: 100%;
-}
-
-body {
-  align-items: center;
+.center-flex {
+  min-block-size: 100dvb;
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 ```
 
-> [!NOTE]
-> Legacy pattern: `height: 100vh` + `place-items: center` still appears in older tutorials. Prefer
-> `dvh`/`dvb`/`svh`/`lvh` for full-viewport layouts on mobile — see MDN on viewport-relative lengths.
+Validation: `place-items` aligns items in block and inline directions at once. Flexbox centering uses `align-items` and `justify-content`. Dynamic viewport units represent viewport dimensions that update as browser UI expands/retracts; MDN also notes that dynamic units can resize during scrolling, so test the result. [MDN place-items][ref-place-items], [MDN flex alignment][ref-flex-align], [MDN viewport units][ref-viewport-units]
 
-> [!TIP]
-> Want to center something else? CSS-Tricks has [a nice write-up](https://css-tricks.com/centering-css-complete-guide/) on doing all of that.
+## 7. Use `aspect-ratio` for media boxes
 
-
-
-### Use `aspect-ratio` Instead of Height/Width
-
-The `aspect-ratio` property allows you to easily size elements and maintain consistent width-to-height ratio. This is incredibly useful in responsive web design to prevent layout shift. Use `object-fit` with it to prevent disrupting the layout if the height/width values of images changes.
+Prefer `aspect-ratio` over wrapper/padding hacks for modern browsers.
 
 ```css
-img {
-  aspect-ratio: 16 / 9; /* width / height */
+.media {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.media > img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 ```
 
-Learn more about the `aspect-ratio` property in this [web.dev post](https://web.dev/articles/aspect-ratio).
+Validation: `aspect-ratio` sets a preferred width-to-height ratio; `object-fit: cover` preserves aspect ratio while filling and clipping as needed. [MDN aspect-ratio][ref-aspect-ratio], [MDN object-fit][ref-object-fit]
 
+## 8. Use `:not()` for exclusion selectors
 
-
-### Comma-Separated Lists
-
-Make list items look like a real, comma-separated list:
+Use `:not()` to apply styles to everything except the excluded case.
 
 ```css
-ul > li:not(:last-child)::after {
+.nav li:not(:last-child) {
+  border-inline-end: 1px solid #666;
+}
+```
+
+Validation: `:not()` matches elements that are not represented by its argument selector list. [MDN :not][ref-not]
+
+## 9. Use `:is()` for compact selector lists
+
+Use `:is()` to reduce repeated selector groups.
+
+```css
+:is(section, article, aside, nav) :is(h1, h2, h3, h4, h5, h6) {
+  margin-block-end: 0.5em;
+}
+```
+
+Validation: `:is()` takes a selector list and selects elements matched by any selector in the list. MDN also documents its forgiving selector-list behavior. [MDN :is][ref-is]
+
+## 10. Use `:where()` for low-specificity defaults
+
+Use `:where()` when a default should be trivial to override.
+
+```css
+:where(a[href]:not([class])) {
+  color: LinkText;
+  text-decoration: underline;
+}
+```
+
+Validation: `:where()` always has zero specificity, unlike `:is()`, whose specificity comes from the most specific selector in its arguments. [MDN :where][ref-where]
+
+## 11. Use generated `content` only for non-critical presentation
+
+Generated commas, visible URLs, and labels can be convenient, but they are not a replacement for semantic text in the DOM.
+
+```css
+ul.tags > li:not(:last-child)::after {
   content: ",";
 }
 ```
 
-Use the `:not()` pseudo-class and no comma will be added to the last item.
+Validation: the `content` property replaces or generates content; MDN documents `attr()` support and accessibility-related alternative text syntax. Treat generated content as presentational unless you have tested your assistive-technology target matrix. [MDN content][ref-content]
 
-> [!NOTE]
-> This tip may not be ideal for accessibility, specifically screen readers. And copy/paste from the browser doesn't work with CSS-generated content. Proceed with caution.
-
-
-### Select Items Using Negative `nth-child`
-
-Use negative `nth-child` in CSS to select items 1 through n.
+## 12. Use negative `:nth-child()` for first-N selection
 
 ```css
-li {
-  display: none;
-}
-
-/* select items 1 through 3 and display them */
 li:nth-child(-n + 3) {
   display: block;
 }
 ```
 
-Or, since you've already learned a little about [using `:not()`](#use-not-to-applyunapply-borders-on-navigation), try:
+Validation: `:nth-child()` matches elements by child index, and MDN documents the `An+B` syntax. [MDN :nth-child][ref-nth-child]
+
+## 13. Use scoped `:nth-child(... of selector)` when sibling filtering matters
 
 ```css
-/* select all items except the first 3 and display them */
-li:not(:nth-child(-n + 3)) {
+li:nth-child(-n + 3 of .item) {
   display: block;
 }
 ```
 
+Validation: MDN documents the `of <complex-real-selector-list>` syntax, which counts only matching siblings for the formula. [MDN nth-child of selector][ref-nth-child-of]
 
+## 14. Use SVG or masks for icons depending on recoloring needs
 
-### Use SVG for Icons
-
-There's no reason not to use SVG for icons:
+Use inline SVG or image SVGs for multicolor art. For monochrome, CSS-recolorable icons, use `mask` and paint with `currentColor`.
 
 ```css
-.logo {
-  background: url("logo.svg");
+.icon {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  background-color: currentColor;
+  mask: url("icon.svg") no-repeat center / contain;
 }
 ```
 
-SVG scales well for all resolution types and is supported in all browsers [back to IE9](http://caniuse.com/#search=svg). Ditch your .png, .jpg, or .gif-jif-whatev files.
+Validation: CSS `mask` hides or clips parts of an element using a mask image; painting the masked element with `currentColor` lets the icon follow the text color. [MDN mask][ref-mask]
 
-> [!NOTE]
-> If you have SVG icon-only buttons for sighted users and the SVG fails to load, this will help maintain accessibility:
+## 15. Scope flow spacing instead of using a global owl selector
+
+The global `* + *` pattern is powerful but can leak into third-party widgets and internal component layouts. Scope it.
 
 ```css
-.no-svg .icon-only::after {
-  content: attr(aria-label);
+.flow > * + * {
+  margin-block-start: 1.5em;
 }
 ```
 
+Validation: adjacent sibling combinators are standard CSS selector behavior; logical `margin-block-start` follows the block axis for the writing mode. [MDN margin-inline/logical margin][ref-margin-inline], [MDN logical properties][ref-logical]
 
-### Use the "Lobotomized Owl" Selector
+## 16. Use `max-height` disclosure only with caveats
 
-It may have a strange name but using the universal selector (`*`) with the adjacent sibling selector (`+`) can provide a powerful CSS capability:
+A `max-height` transition works mechanically but animates toward an arbitrary ceiling, which can make timing feel wrong and can truncate content if the ceiling is too small.
 
 ```css
-* + * {
-  margin-top: 1.5em;
+.disclosure {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.disclosure.is-open {
+  max-height: 50rem;
 }
 ```
 
-In this example, all elements in the flow of the document that follow other elements will receive `margin-top: 1.5em`.
+Validation: `max-height` caps used height, and `overflow` controls clipping/scroll behavior when content does not fit. MDN warns to ensure `max-height` content is not truncated/obscured when users zoom text. [MDN max-height][ref-max-height], [MDN overflow][ref-overflow]
 
-> [!TIP]
-> For more on the "lobotomized owl" selector, read [Heydon Pickering's post](http://alistapart.com/article/axiomatic-css-and-lobotomized-owls) on _A List Apart_.
+## 17. Prefer grid-row disclosure for unknown-height content
 
-
-
-### Use `max-height` for Pure CSS Sliders
-
-Implement CSS-only sliders using `max-height` with overflow hidden:
+For modern layouts, animate grid rows instead of guessing a `max-height` ceiling.
 
 ```css
-.slider {
-  max-height: 200px;
-  overflow-y: hidden;
-  width: 300px;
+.disclosure {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
 }
 
-.slider:hover {
-  max-height: 600px;
-  overflow-y: scroll;
+.disclosure.is-open {
+  grid-template-rows: 1fr;
+}
+
+.disclosure > * {
+  min-block-size: 0;
+  overflow: hidden;
 }
 ```
 
-The element expands to the `max-height` value on hover and the slider displays as a result of the overflow.
+Validation: CSS Grid defines row/column tracks, and grid track sizes are animatable in modern engines; still test because animation edge cases depend on content, overflow, and layout. [MDN CSS grid][ref-grid], [MDN grid-template-columns][ref-grid-template-columns]
 
-
-### Equal-Width Table Cells
-
-Tables can be a pain to work with. Try using `table-layout: fixed` to keep cells at equal width:
+## 18. Use `table-layout: fixed` only when the table width is known
 
 ```css
-.calendar {
+table.report {
+  inline-size: 100%;
   table-layout: fixed;
 }
 ```
 
-Pain-free table layouts.
+Validation: MDN says the fixed table-layout algorithm is faster because horizontal layout depends on table width, column widths, borders, and cell spacing, not cell contents; it also notes that if `width` is `auto` or unspecified, `fixed` has no effect. [MDN table-layout][ref-table-layout]
 
+## 19. Use Grid `auto-fit` for responsive cards
 
-
-### Get Rid of Margin Hacks With Flexbox
-
-When working with column gutters you can get rid of `nth-`, `first-`, and `last-child` hacks by using flexbox's `space-between` property:
+Prefer auto-fitting Grid over `space-between` plus percentage flex basis for card galleries, because Grid keeps incomplete rows aligned.
 
 ```css
-.list {
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1.5rem;
+}
+```
+
+Validation: `repeat()` supports `auto-fit`, `minmax()` defines a size range, and `gap` defines spacing between grid/flex tracks/items. [MDN repeat()][ref-repeat], [MDN minmax()][ref-minmax], [MDN gap][ref-gap]
+
+## 20. Prefer `gap` over margin hacks in Flexbox/Grid
+
+```css
+.cluster {
   display: flex;
-  justify-content: space-between;
-}
-
-.list .person {
-  flex-basis: 23%;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 ```
 
-Now column gutters always appear evenly-spaced.
+Validation: `gap` applies to multi-column, flex, and grid layouts and avoids first/last-child margin cleanup. [MDN gap][ref-gap]
 
-
-### Use Attribute Selectors with Empty Links
-
-Display links when the `<a>` element has no text value but the `href` attribute has a link:
+## 21. Use logical properties for internationalized layout
 
 ```css
-a[href^="http"]:empty::before {
-  content: attr(href);
-}
-```
-
-That's really convenient.
-
-
-> [!NOTE]
-> This tip may not be ideal for accessibility, specifically screen readers. And copy/paste from the browser doesn't work with CSS-generated content. Proceed with caution.
-
-
-### Control Specificity Better with `:is()`
-
-The `:is()` pseudo-class is used to target multiple selectors at once, reducing redundancy and enhancing code readability. This is incredibly useful for writing large selectors in a more compact form.
-
-```css
-:is(section, article, aside, nav) :is(h1, h2, h3, h4, h5, h6) {
-  color: green;
-}
-```
-
-The above ruleset is equivalent to the following number selector rules...
-
-```css
-section h1,
-section h2,
-section h3,
-section h4,
-section h5,
-section h6,
-article h1,
-article h2,
-article h3,
-article h4,
-article h5,
-article h6,
-aside h1,
-aside h2,
-aside h3,
-aside h4,
-aside h5,
-aside h6,
-nav h1,
-nav h2,
-nav h3,
-nav h4,
-nav h5,
-nav h6 {
-  color: green;
-}
-```
-
-
-
-### Style "Default" Links
-
-Add a style for "default" links:
-
-```css
-a[href]:not([class]) {
-  color: #008000;
-  text-decoration: underline;
-}
-```
-
-Now links that are inserted via a CMS, which don't usually have a `class` attribute, will have a distinction without generically affecting the cascade.
-
-
-### Intrinsic Ratio Boxes (legacy fallback)
-
-> [!NOTE]
-> **Legacy only.** Prefer [`aspect-ratio`](#use-aspect-ratio-instead-of-heightwidth) (Baseline Widely
-> available) for new code. Keep this padding hack only when you must support very old browsers or
-> need a pattern that predates `aspect-ratio`.
-
-To create a box with an intrinsic ratio, apply top or bottom padding to a div:
-
-```css
-.container {
-  height: 0;
-  padding-bottom: 20%;
-  position: relative;
+.card {
+  padding-block: 1rem;
+  padding-inline: 1.25rem;
+  margin-inline: auto;
 }
 
-.container div {
-  border: 2px dashed #ddd;
-  height: 100%;
-  left: 0;
+.overlay {
   position: absolute;
-  top: 0;
-  width: 100%;
+  inset: 0;
 }
 ```
 
-Using 20% for padding makes the height of the box equal to 20% of its width. No matter the width of the viewport, the child div will keep its aspect ratio (100% / 20% = 5:1).
+Validation: logical properties map to physical properties depending on writing mode, direction, and text orientation. [MDN logical properties][ref-logical], [MDN margin-inline][ref-margin-inline], [MDN padding-block][ref-padding-block]
 
-
-
-### Style Broken Images
-
-Make broken images more aesthetically-pleasing with a little bit of CSS:
+## 22. Use `:empty` narrowly
 
 ```css
-img {
-  display: block;
-  font-family: sans-serif;
-  font-weight: 300;
-  height: auto;
-  line-height: 2;
-  position: relative;
-  text-align: center;
-  width: 100%;
-}
-```
-
-Now add pseudo-elements rules to display a user message and URL reference of the broken image:
-
-```css
-img::before {
-  content: "We're sorry, the image below is broken :(";
-  display: block;
-  margin-bottom: 10px;
-}
-
-img::after {
-  content: "(url: " attr(src) ")";
-  display: block;
-  font-size: 12px;
-}
-```
-
-> [!TIP]
-> Learn more about styling for this pattern in [Ire Aderinokun's post](http://bitsofco.de/styling-broken-images/).
-
-
-### Use `rem` for Global Sizing; Use `em` for Local Sizing
-
-After setting the base font size at the root (`html { font-size: 100%; }`), set the font size for textual elements to `em`:
-
-```css
-h2 {
-  font-size: 2em;
-}
-
-p {
-  font-size: 1em;
-}
-```
-
-Then set the font-size for modules to `rem`:
-
-```css
-article {
-  font-size: 1.25rem;
-}
-
-aside .module {
-  font-size: 0.9rem;
-}
-```
-
-Now each module becomes compartmentalized and easier to style, more maintainable, and flexible.
-
-
-### Hide Autoplay Videos That Aren't Muted
-
-This is a great trick for a custom user stylesheet. Avoid overloading a user with sound from a video that autoplays when the page is loaded. If the sound isn't muted, don't show the video:
-
-```css
-video[autoplay]:not([muted]) {
+.error-message:empty {
   display: none;
 }
 ```
 
-Once again, we're taking advantage of using the [`:not()`](#use-not-to-applyunapply-borders-on-navigation) pseudo-class.
+Validation: `:empty` matches elements with no children; text nodes, including whitespace, make an element non-empty. Scope it to known elements instead of using `:empty` globally. [MDN :empty][ref-empty]
 
-
-### Use `:root` for Flexible Type
-
-The type font size in a responsive layout should be able to adjust with each viewport. You can calculate the font size based on the viewport height and width using `:root`:
-
-```css
-:root {
-  font-size: calc(1vw + 1vh + 0.5vmin);
-}
-```
-
-Now you can utilize the `root em` unit based on the value calculated by `:root`:
-
-```css
-body {
-  font: 1rem/1.6 sans-serif;
-}
-```
-
-
-
-### Set `font-size` on Form Elements for a Better Mobile Experience
-
-To avoid mobile browsers (iOS Safari, _et al_.) from zooming in on HTML form elements when a `<select>` drop-down is tapped, add `font-size` to the selector rule:
-
-```css
-input[type="text"],
-input[type="number"],
-select,
-textarea {
-  font-size: 16px;
-}
-```
-
-
-### Use Pointer Events to Control Mouse Events
-
-[Pointer events](https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events) control how pointer
-input hits an element. To block clicks on a disabled-looking control:
+## 23. Use `pointer-events: none` only for pointer hit-testing
 
 ```css
 button:disabled {
@@ -591,101 +380,90 @@ button:disabled {
 }
 ```
 
-> [!WARNING]
-> `pointer-events: none` blocks pointer interaction, **not all interaction**. Elements with
-> `pointer-events: none` can still receive keyboard focus through Tab navigation. Do not use it as
-> your only “disabled” behavior for interactive controls. Prefer the native `disabled` attribute
-> where available.
+Validation: `pointer-events: none` affects pointer targeting; MDN notes elements with `pointer-events: none` can still receive focus through sequential keyboard navigation. Prefer the native `disabled` attribute where available. [MDN pointer-events][ref-pointer-events]
 
-
-### Set `display: none` on Line Breaks Used as Spacing
-
-As [Harry Roberts pointed out](https://twitter.com/csswizardry/status/1170835532584235008), this can help prevent CMS users from using extra line breaks for spacing:
+## 24. Hide autoplaying unmuted video only as a user stylesheet or controlled policy
 
 ```css
-br + br {
+video[autoplay]:not([muted]) {
   display: none;
 }
 ```
 
+Validation: the selector is valid CSS because attribute selectors and `:not()` can combine; however, hiding media can affect content access. Use it as a user preference or product policy, not as an invisible surprise. [MDN :not][ref-not]
 
-### Use `:empty` to Hide Empty HTML Elements
-
-If you have HTML elements that are empty, i.e., the content has yet to be set either by a CMS or dynamically injected (e.g., `<p class="error-message"></p>`) and it's creating unwanted space on your layout, use the `:empty` pseudo-class to hide the element on the layout.
+## 25. Use `@font-face local()` cautiously
 
 ```css
-:empty {
-  display: none;
+@font-face {
+  font-family: "ExampleBrand";
+  src: url("/fonts/example-brand.woff2") format("woff2");
+  font-display: swap;
 }
 ```
 
-> [!NOTE]
-> Keep in mind that elements with whitespace aren't considered empty, e.g., `<p class="error-message"> </p>`.
+Avoid `local()` for strict brand fonts unless you have measured metrics and version risk. A user-installed font with the same name can be stale or metrically different. Use `local()` mainly for system font stacks or when accepting local substitution is intentional.
 
+Validation: MDN documents `local()` in `@font-face src`, including local full font name/PostScript name lookup and notes that user agents may ignore user-installed fonts for security/privacy reasons. `font-display: swap` gives an extremely small block period and an infinite swap period. [MDN @font-face src][ref-font-src], [MDN font-display][ref-font-display]
 
-## Modern CSS (Baseline 2024–2026)
-
-The tips above are evergreen. These are newer **native features that retire old hacks**. Each entry
-is bucketed by [MDN Baseline](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
-availability — confirm your project's Browserslist floor on [caniuse](https://caniuse.com) before
-shipping.
-
-> Baseline is a **browser-compatibility signal only**. It does not replace accessibility, usability,
-> performance, keyboard testing, or project-specific QA.
-
-### Shipping Modern CSS Safely
-
-1. Pick a Baseline target or explicit Browserslist target.
-2. Treat **Baseline Widely available** features as normal production CSS.
-3. Treat **Baseline Newly available** features as production-ready only if your audience's browser
-   floor supports them.
-4. Treat **Limited availability** features as progressive enhancement only.
-5. Use `@supports` for layout-changing enhancements.
-6. Test accessibility, motion preferences, keyboard behavior, and contrast separately from browser
-   support.
-
-Baseline can be enforced through project tooling (Browserslist, ESLint CSS plugins) — see
-[web.dev/baseline](https://web.dev/baseline).
-
-> [!TIP]
-> Gate layout-changing enhancements behind a feature query when the fallback must work:
-> ```css
-> @supports (anchor-name: --x) {
->   /* enhanced layout */
-> }
-> ```
-
-
-### Baseline widely available (normal production CSS)
-
-Safe modern defaults for current evergreen targets: `:has()`, `@container`, native CSS nesting,
-`@layer`, `subgrid`, `color-mix()`, logical properties, `:focus-visible`, `clamp()`, `aspect-ratio`,
-and `:is()`.
-
-#### Select a Parent/Sibling with `:has()`
-
-The relational pseudo-class matches an element by its descendants or following siblings — the
-long-wished-for "parent selector." Replaces JS class-toggling for whole families of state.
+## 26. Use fluid type with `clamp()` instead of unbounded viewport math
 
 ```css
-/* a card that contains an image gets a different layout */
+h1 {
+  font-size: clamp(1.75rem, 1rem + 3vw, 3rem);
+}
+```
+
+Validation: `clamp(min, preferred, max)` clamps a value between lower and upper bounds; it is a better default than raw `calc(1vw + 1vh + ...)` because it includes floor and ceiling values. [MDN clamp()][ref-clamp]
+
+## 27. Use `@supports` for layout-changing enhancements
+
+```css
+.card {
+  position: relative;
+}
+
+@supports (anchor-name: --tip) {
+  .trigger {
+    anchor-name: --tip;
+  }
+
+  .tooltip {
+    position-anchor: --tip;
+    position-area: top;
+  }
+}
+```
+
+Validation: `@supports` tests whether a browser supports a CSS declaration before applying a block. [MDN @supports][ref-supports]
+
+---
+
+# Modern CSS support buckets
+
+## Baseline Widely available / normal production CSS for current evergreen targets
+
+Treat these as normal production CSS for current evergreen targets, while still testing your project’s real browser floor.
+
+### `:has()`
+
+Use `:has()` to style an element based on its descendants or following siblings.
+
+```css
 .card:has(> img) {
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 8rem 1fr;
 }
 
-/* style a field when its input is focused or invalid — no JS */
 .field:has(input:focus-visible) {
-  outline: 2px solid;
-}
-.field:has(input:user-invalid) {
-  color: #b00;
+  outline: 2px solid currentColor;
 }
 ```
 
-#### Component-Level Responsive with Container Queries
+Validation: MDN marks `:has()` Baseline Widely available and describes it as matching an element if any relative selector passed as an argument matches when anchored against that element. MDN also notes performance considerations for broad `:has()` usage, so keep selectors scoped. [MDN :has][ref-has]
 
-Media queries respond to the viewport; container queries respond to the **parent's** size, so a
-component adapts wherever you drop it. Set `container-type` on the wrapper, then `@container`.
+### Container queries
+
+Use container queries when a component should respond to its parent/container instead of the viewport.
 
 ```css
 .wrapper {
@@ -703,9 +481,11 @@ component adapts wherever you drop it. Set `container-type` on the wrapper, then
 }
 ```
 
-#### Native CSS Nesting
+Validation: MDN marks container queries Baseline Widely available and describes them as applying styles to descendants based on a container’s size or style. [MDN container queries][ref-container-queries], [MDN @container][ref-container-at]
 
-Nest selectors without Sass. Use `&` to make the parent reference explicit.
+### Native CSS nesting
+
+Use native nesting for readability, but keep `&` explicit when joining selectors or pseudo-classes.
 
 ```css
 .card {
@@ -716,36 +496,34 @@ Nest selectors without Sass. Use `&` to make the parent reference explicit.
   }
 
   &:hover {
-    background: #f6f6f6;
+    background: Canvas;
   }
 }
 ```
 
-#### Tame Specificity with `@layer`
+Validation: MDN documents that CSS nesting is parsed by the browser, unlike Sass-style preprocessing. Can I use shows broad modern support but not universal support, so verify your floor. [MDN CSS nesting][ref-nesting], [Can I use CSS nesting][ref-caniuse-nesting]
 
-Cascade layers declare order of precedence up front — later layers always win regardless of selector
-specificity. Ends the `!important` arms race between reset, base, components, and utilities.
+### Cascade layers with `@layer`
+
+Use layers to define cascade order across reset/base/components/utilities.
 
 ```css
 @layer reset, base, components, utilities;
 
 @layer base {
-  a {
-    color: blue;
-  }
+  a { color: LinkText; }
 }
 
 @layer utilities {
-  .text-red {
-    color: red; /* wins even though it's less specific */
-  }
+  .text-red { color: red; }
 }
 ```
 
-#### Align Nested Grids with `subgrid`
+Validation: MDN marks `@layer` Baseline Widely available and documents that later layers have higher precedence, allowing lower-specificity selectors in later layers to override higher-specificity selectors in earlier layers. [MDN @layer][ref-layer]
 
-A grid item can inherit its parent's tracks with `subgrid`, so children of separate cards line up on
-a shared grid — no magic numbers.
+### Subgrid
+
+Use `subgrid` when nested grid items need to align to parent grid tracks.
 
 ```css
 .cards {
@@ -761,10 +539,11 @@ a shared grid — no magic numbers.
 }
 ```
 
-#### Mix Colors with `color-mix()`
+Validation: MDN marks subgrid Baseline Widely available and documents that subgrid lets a grid item use the parent grid’s tracks. [MDN subgrid][ref-subgrid]
 
-Compute tints, shades, and translucent variants in the browser — no preprocessor — and it works with
-custom properties. Prefer a perceptual space like `oklab`/`oklch`.
+### `color-mix()`
+
+Use `color-mix()` for browser-computed tints, shades, and transparent variants. Prefer a perceptual color space such as `oklab`/`oklch` when design intent depends on perceived color.
 
 ```css
 .btn {
@@ -774,72 +553,42 @@ custom properties. Prefer a perceptual space like `oklab`/`oklch`.
 .btn:hover {
   background: color-mix(in oklab, var(--brand) 85%, black);
 }
-
-.btn--ghost {
-  background: color-mix(in srgb, var(--brand) 12%, transparent);
-}
 ```
 
-#### Use Logical Properties for Flow-Relative Layout
+Validation: MDN marks `color-mix()` Baseline Widely available and defines it as mixing two colors in a given color space by a specified amount. [MDN color-mix()][ref-color-mix]
 
-`*-inline`/`*-block` and `inset` follow the writing mode, so the same CSS mirrors correctly for RTL
-and vertical text. Reach for these over `left`/`right`/`margin-left`.
+### Logical properties
+
+Use flow-relative properties instead of physical `left/right/top/bottom` where layout should adapt to writing mode.
 
 ```css
 .box {
   margin-inline: auto;
   padding-block: 1rem;
 }
-
-.overlay {
-  position: absolute;
-  inset: 0; /* top/right/bottom/left: 0 */
-}
 ```
 
-#### Prefer `:focus-visible` over `:focus`
+Validation: MDN defines logical properties and values as mapping to physical equivalents based on writing mode, direction, and text orientation. [MDN logical properties][ref-logical]
 
-`:focus-visible` shows the focus ring only when the browser judges it useful (keyboard navigation),
-so you keep accessibility without a ring on every mouse click. A modern upgrade to the
-[`:focus` form-element tip](#set-focus-for-form-elements) above.
+### `clamp()`
 
-```css
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
-:focus-visible {
-  outline: #000 dotted 2px;
-  outline-offset: 0.05em;
-}
-```
-
-#### Fluid Type with `clamp()`
-
-`clamp(MIN, PREFERRED, MAX)` scales a value with the viewport but stays within bounds — a robust,
-readable replacement for the [`:root { calc(1vw + 1vh …) }` trick](#use-root-for-flexible-type)
-above, which has no floor or ceiling.
+Use `clamp()` for fluid sizes with hard limits.
 
 ```css
-h1 {
-  font-size: clamp(1.75rem, 1rem + 3vw, 3rem);
-}
-
 .section {
   padding-block: clamp(2rem, 5vw, 5rem);
 }
 ```
 
+Validation: MDN marks `clamp()` Baseline Widely available and describes its min/preferred/max behavior. [MDN clamp()][ref-clamp]
 
-### Baseline newly available (verify your support floor)
+---
 
-Production-ready only when your browser floor supports them: `text-wrap`, `light-dark()`, `@scope`,
-`@starting-style`, anchor positioning, and `contrast-color()`.
+## Baseline Newly available / verify support floor
 
-#### Better Wrapping with `text-wrap`
+Treat these as production-ready only when your project’s supported browsers include the required versions.
 
-`balance` evens out the lines of short blocks like headings; `pretty` prevents orphans and ragged
-last lines in paragraphs. One line, no `<br>` babysitting.
+### `text-wrap`
 
 ```css
 h1,
@@ -853,14 +602,9 @@ h2,
 }
 ```
 
-> [!NOTE]
-> Baseline **Newly available** (2024). `pretty` degrades to normal wrapping where unsupported — safe
-> progressive enhancement. Verify Firefox/Safari floors if `pretty` is required, not optional.
+Validation: MDN marks `text-wrap` Baseline 2024 Newly available. `balance` balances line lengths, while `pretty` aims for better typography such as avoiding orphans. MDN cautions that `balance` can be computationally expensive and is best for short blocks/headings. [MDN text-wrap][ref-text-wrap]
 
-#### One-Declaration Theming with `light-dark()`
-
-Return a different value per color scheme in a single declaration — once you opt the root into both
-schemes. No duplicated `prefers-color-scheme` block for simple value swaps.
+### `light-dark()`
 
 ```css
 :root {
@@ -873,30 +617,21 @@ body {
 }
 ```
 
-> [!NOTE]
-> Baseline **Newly available** (2024). Solid in current Chrome/Safari/Firefox — verify your support
-> floor before dropping `prefers-color-scheme` fallbacks.
+Validation: MDN marks `light-dark()` Baseline 2024 Newly available. It returns one of two colors based on active color scheme, and it requires `color-scheme: light dark` or equivalent opt-in. [MDN light-dark()][ref-light-dark]
 
-#### Scope Styles with `@scope`
-
-Limit a ruleset to a subtree — and optionally stop at an inner boundary — without specificity hacks
-or BEM-style naming. Useful for component or CMS-injected markup.
+### `@scope`
 
 ```css
 @scope (.card) to (.card__content) {
   img {
-    border-radius: 8px; /* only cards, and not inside .card__content */
+    border-radius: 8px;
   }
 }
 ```
 
-> [!NOTE]
-> Baseline **Newly available** (2025).
+Validation: MDN marks `@scope` Baseline 2025 Newly available and describes it as limiting selectors to specific DOM subtrees without requiring over-specific selectors. [MDN @scope][ref-scope]
 
-#### Flash-Free Enter Transitions with `@starting-style`
-
-Defines the "before-open" styles an element animates **from** when it's first rendered (including
-`display: none → block`, popovers, and dialogs), so entrances don't snap into place.
+### `@starting-style`
 
 ```css
 .toast {
@@ -913,15 +648,9 @@ Defines the "before-open" styles an element animates **from** when it's first re
 }
 ```
 
-> [!NOTE]
-> Baseline **Newly available** (2024). To transition an element that also toggles `display`, set
-> `transition-behavior: allow-discrete`.
+Validation: MDN marks `@starting-style` Baseline 2024 Newly available and defines it as starting values for elements before their first style update. [MDN @starting-style][ref-starting-style]
 
-#### Tooltips & Popovers: Anchor Positioning — Limited availability
-
-Anchor positioning is still **Limited availability** (not yet Baseline — Chromium ships it, Firefox
-and Safari lag per MDN). Treat it as progressive enhancement: ship a normal positioning fallback
-first, then enhance with `@supports`.
+### Anchor positioning
 
 ```css
 .trigger {
@@ -931,31 +660,19 @@ first, then enhance with `@supports`.
 .tooltip {
   position: fixed;
   position-anchor: --tip;
-  position-area: top; /* sit above the trigger */
-  position-try-fallbacks: flip-block; /* flip below if it would clip */
-}
-
-@supports not (anchor-name: --tip) {
-  .tooltip {
-    /* fallback: absolute positioning, JS coords, or static placement */
-  }
+  position-area: top;
+  position-try-fallbacks: flip-block;
 }
 ```
 
-> [!NOTE]
-> While only Limited availability, anchor positioning still has known cross-browser bugs and missing
-> pieces (web-features maintainers tracked it as effectively "beta"; Firefox shipped it later/flagged).
-> The `@supports` fallback above is load-bearing, not decorative — keep a working non-anchored layout.
+Validation: MDN marks `anchor-name`, `position-area`, and `position-try-fallbacks` Baseline 2026 Newly available. Use `@supports` and a non-anchored fallback for older browsers. [MDN anchor positioning][ref-anchor-module], [MDN anchor-name][ref-anchor-name], [MDN position-area][ref-position-area], [MDN position-try-fallbacks][ref-position-try-fallbacks]
 
-#### Automatic Black/White Contrast with `contrast-color()`
-
-Picks **black or white** — whichever contrasts more with the given color — as a foreground. **Not**
-the older `color-contrast()` you'll still see in blog posts.
+### `contrast-color()`
 
 ```css
 .badge {
   background: var(--brand);
-  color: white; /* fallback for unsupported browsers */
+  color: white;
 }
 
 @supports (color: contrast-color(red)) {
@@ -965,72 +682,9 @@ the older `color-contrast()` you'll still see in blog posts.
 }
 ```
 
-> [!NOTE]
-> Baseline **Newly available** (April 2026). Gate behind `@supports` for older floors.
+Validation: MDN marks `contrast-color()` Baseline 2026 Newly available. It returns black or white based on the input color, but MDN warns that mid-tone backgrounds can still fail readability/WCAG AA, so test real tokens. [MDN contrast-color()][ref-contrast-color]
 
-> [!WARNING]
-> Useful, but not magic: it only returns black or white, so a mid-tone background (e.g. `#2277d3`)
-> can still fail WCAG AA for small text. Use it with light/dark design tokens and still test contrast.
-
-
-### Limited availability (progressive enhancement only)
-
-MDN marks these as **Limited availability** or Interop still lists them as active focus areas. Ship
-a working baseline first; enhance behind `@supports`.
-
-#### Theme Native Controls with `accent-color`
-
-Recolor checkboxes, radios, range sliders, and progress bars to your brand in one line — keeping the
-native, accessible widgets.
-
-```css
-:root {
-  accent-color: rebeccapurple;
-}
-```
-
-> [!NOTE]
-> **Limited availability** on MDN as of 2026 — verify engine support before relying on it for brand
-> theming; provide a fallback palette for unsupported browsers.
-
-#### Scroll-Driven Animations (no scroll listeners)
-
-Drive an animation by scroll progress (`scroll()`) or an element's visibility (`view()`) — off the
-main thread, replacing `addEventListener('scroll', …)`. Interop 2026 still lists scroll-driven
-animations as an active interoperability focus area.
-
-```css
-.reveal {
-  animation: fade-in linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 40%;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    translate: 0 20px;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* always give motion an opt-out */
-@media (prefers-reduced-motion: reduce) {
-  .reveal {
-    animation: none;
-  }
-}
-```
-
-> [!NOTE]
-> Gate behind `@supports (animation-timeline: view())` and ship static content as the default.
-
-#### Auto-Sizing Inputs with `field-sizing`
-
-`field-sizing: content` lets inputs and textareas grow with their content instead of staying a fixed
-size — the autosize-textarea JS hack, in one line.
+### `field-sizing`
 
 ```css
 textarea,
@@ -1039,117 +693,810 @@ input {
 }
 ```
 
-> [!NOTE]
-> **Limited availability** on MDN as of 2026. Keep a fixed `min-height` / JS autosize fallback.
+Validation: MDN marks `field-sizing` Baseline 2026 Newly available and defines it as enabling form controls to fit their content. Keep min/max sizes and a fallback for older browser floors. [MDN field-sizing][ref-field-sizing]
 
+---
 
-### Retire / modernize older tips
+## Limited availability / progressive enhancement only
 
-Several evergreen tips above predate features that now do the job natively. The originals stay for
-context; reach for these in new code. Availability is called out where it bites — the `height: auto`
-animation in particular is **Chrome-only** as of 2026.
+Ship a working default first. Add these behind `@supports` or feature detection.
 
-#### Drop the padding-hack ratio box → `aspect-ratio`
-
-The [Intrinsic Ratio Boxes](#intrinsic-ratio-boxes-legacy-fallback) padding trick needs a wrapper and absolute
-positioning. [`aspect-ratio`](#use-aspect-ratio-instead-of-heightwidth) (covered above) does it on one
-element, no wrapper.
+### `accent-color`
 
 ```css
-.embed { aspect-ratio: 16 / 9; } /* replaces height: 0 + padding-bottom: 56.25% */
+:root {
+  accent-color: rebeccapurple;
+}
 ```
 
-#### Smooth disclosure → animate grid rows, not `max-height`
+Validation: MDN marks `accent-color` Limited availability. It sets the accent color for some user-interface controls, but browser/element behavior varies, so do not rely on it as the only way to convey state. [MDN accent-color][ref-accent-color]
 
-[`max-height` sliders](#use-max-height-for-pure-css-sliders) animate against a *guessed* ceiling, so
-the transition wastes time crossing the empty gap between the real height and the max. Animate
-`grid-template-rows` from `0fr` to `1fr` instead — widely supported, no magic number.
+### Scroll-driven animations
 
 ```css
-.disclosure {
+.reveal {
+  opacity: 1;
+}
+
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: fade-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+}
+```
+
+Validation: MDN’s scroll-driven animation module documents scroll progress and view progress timelines; `animation-timeline` is marked Limited availability. Provide static content by default and honor reduced motion. [MDN scroll-driven animations][ref-scroll-driven], [MDN animation-timeline][ref-animation-timeline]
+
+### `interpolate-size` and `calc-size()`
+
+```css
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+
+  .details {
+    transition: block-size 0.3s ease;
+    block-size: 0;
+    overflow: hidden;
+  }
+
+  .details.is-open {
+    block-size: auto;
+  }
+}
+```
+
+Validation: MDN marks `interpolate-size` and `calc-size()` Limited availability/experimental. Chrome’s developer documentation describes Chrome 129 support and recommends progressive enhancement. Do not treat intrinsic-size interpolation as Baseline yet. [MDN interpolate-size][ref-interpolate-size], [MDN calc-size][ref-calc-size], [Chrome interpolate-size][ref-chrome-interpolate]
+
+### `transition-behavior: allow-discrete`
+
+```css
+.dialog {
+  transition:
+    opacity 0.2s ease,
+    display 0.2s allow-discrete;
+  transition-behavior: allow-discrete;
+}
+```
+
+Validation: MDN marks `transition-behavior` Baseline 2024 Newly available and defines `allow-discrete` as starting transitions for discrete animation-type properties. It is not a replacement for `interpolate-size` when the problem is animating to/from intrinsic sizes. [MDN transition-behavior][ref-transition-behavior]
+
+---
+
+
+# More cool modern CSS tricks — validated additions
+
+These additions are meant to sit beside the original patterns. The same rule applies: ship a boring, working fallback first, then enhance only where your browser floor supports the feature.
+
+## 28. Animate real custom properties with `@property`
+
+Unregistered custom properties animate as untyped token strings. Register a property when you want the browser to understand its type, interpolate it, validate it, and give it an initial value.
+
+```css
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.spinner {
+  inline-size: 3rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(from var(--angle), currentColor 0 25%, transparent 0);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { --angle: 1turn; }
+}
+```
+
+Validation: MDN marks `@property` as Baseline 2024 Newly available and describes it as a way to explicitly define CSS custom properties, including syntax, inheritance, and initial values. Use computationally independent `initial-value`s such as `0deg`, `10px`, or a named color. [MDN @property][ref-property]
+
+## 29. Make component typography respond to the container with `cqi`
+
+Viewport units make every copy of a component scale the same way. Container query units let each copy scale to its own container.
+
+```css
+.article-card-list {
+  container-type: inline-size;
+}
+
+.article-card h2 {
+  font-size: clamp(1.125rem, 0.85rem + 3cqi, 1.75rem);
+}
+
+.article-card {
+  padding: clamp(1rem, 4cqi, 2rem);
+}
+```
+
+Validation: MDN documents container query length units: `cqi` is 1% of the query container's inline size, `cqb` is 1% of its block size, and `cqmin`/`cqmax` use the smaller/larger of those axes. If no eligible query container exists, container query units fall back to the small viewport unit for that axis, so set the container deliberately. [MDN container query units][ref-container-query-units]
+
+## 30. Validate forms after interaction with `:user-valid` and `:user-invalid`
+
+Use the user-action pseudo-classes to avoid yelling at users before they have typed anything.
+
+```css
+.field {
   display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease;
+  gap: 0.35rem;
 }
-.disclosure.is-open { grid-template-rows: 1fr; }
-.disclosure > * { overflow: hidden; } /* min-height: 0 so the row can collapse */
+
+.field:has(input:user-invalid) {
+  color: #b42318;
+}
+
+input:user-invalid {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+input:user-valid {
+  outline: 2px solid color-mix(in oklab, green 70%, currentColor);
+  outline-offset: 2px;
+}
 ```
 
-> [!NOTE]
-> A true `height: 0 → auto` transition needs `interpolate-size: allow-keywords` (or `calc-size(auto)`),
-> which is **Chrome 129+ only** as of 2026 — not Baseline. Use it as progressive enhancement; other
-> browsers just snap. `transition-behavior: allow-discrete` alone will **not** interpolate `height` —
-> it only governs discrete properties like `display`.
+Validation: MDN marks both `:user-valid` and `:user-invalid` as Baseline Widely available since November 2023. `:user-valid` matches a validated element only after user interaction, while `:user-invalid` represents validated form elements that fail their constraints after interaction. [MDN :user-valid][ref-user-valid], [MDN :user-invalid][ref-user-invalid]
 
-#### Even columns → `auto-fit` grid, not `space-between` + `%`
+## 31. Style popovers by open state instead of toggling classes
 
-[`justify-content: space-between` with `flex-basis: 23%`](#get-rid-of-margin-hacks-with-flexbox) snaps
-a partly-filled last row to the edges (e.g. 2 items in a 4-up row fly to opposite ends). An `auto-fit`
-grid keeps every row aligned, complete or not.
+For HTML popovers, use `:popover-open` for the visible state and `::backdrop` for modal-style dimming when the element is placed in the top layer.
 
 ```css
-.list {
+[popover] {
+  max-inline-size: min(32rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 1px solid color-mix(in oklab, currentColor 25%, transparent);
+  border-radius: 0.75rem;
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.2);
+}
+
+[popover]:popover-open {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  gap: 0.75rem;
+}
+
+[popover]::backdrop {
+  background: rgb(0 0 0 / 0.35);
 }
 ```
 
-#### Reset intent: `unset` vs `revert`
+Validation: MDN marks `:popover-open` as Baseline 2024 Newly available and defines it as matching a popover element in the showing state. MDN marks `::backdrop` as Baseline Widely available, with some support caveats, and defines it as the box rendered beneath top-layer elements. [MDN :popover-open][ref-popover-open], [MDN ::backdrop][ref-backdrop]
 
-These aren't interchangeable — pick by what you want. [`all: unset`](#use-all-unset-carefully-for-component-resets)
-gives a clean slate but sends non-inherited props to their *initial* values, so a `<button>` becomes
-`display: inline` and loses its box. `all: revert` rolls back to the user-agent stylesheet — which
-keeps the button's box **and** its native border/background, so it's "undo my styles," not "strip to
-nothing."
+## 32. Animate top-layer entrances carefully
+
+Top-layer UI such as popovers and dialogs can combine `@starting-style`, discrete transitions, and `overlay` for smoother open/close behavior. Keep this behind feature checks because `overlay` is still limited.
 
 ```css
-button { all: unset; display: inline-block; } /* clean slate, then fix the box */
-button { all: revert; }                        /* restore the native button look */
-```
+.toast[popover] {
+  opacity: 0;
+  translate: 0 0.75rem;
+  transition:
+    opacity 180ms ease,
+    translate 180ms ease;
+}
 
-#### Don't `local()` brand fonts
+.toast[popover]:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
 
-The [local-font check](#check-if-font-is-installed-locally) can match a *stale* user-installed copy
-with different metrics, causing layout shift (CLS). For brand type, self-host an optimized `.woff2`
-with `font-display: swap` and a metric-matching `size-adjust` descriptor; reserve `local()` for system
-fonts via a `system-ui` stack.
+@starting-style {
+  .toast[popover]:popover-open {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
 
-#### Scope the owl → `.flow`
-
-A global [`* + *`](#use-the-lobotomized-owl-selector) leaks margins into third-party widgets and grid
-children. Scope it to a flow utility (and use a logical property while you're there).
-
-```css
-.flow > * + * { margin-block-start: 1.5em; }
-```
-
-#### Recolorable icons → `mask`, not `background`
-
-[`background: url(icon.svg)`](#use-svg-for-icons) can't be recolored from CSS. For monochrome icons,
-`mask` the SVG and paint with `currentColor` so it inherits text color. (Keep `background`/inline SVG
-for multicolor art.)
-
-```css
-.icon {
-  width: 24px;
-  height: 24px;
-  background-color: currentColor; /* the icon's color */
-  mask: url("icon.svg") no-repeat center / contain;
+@supports (transition-behavior: allow-discrete) and (overlay: auto) {
+  .toast[popover] {
+    transition:
+      opacity 180ms ease,
+      translate 180ms ease,
+      overlay 180ms ease allow-discrete,
+      display 180ms ease allow-discrete;
+  }
 }
 ```
 
-#### Two quick selector upgrades
+Validation: `@starting-style` is already covered above as Baseline 2024 Newly available. MDN marks `overlay` as Limited availability and experimental; it is only relevant in `transition-property` when `transition-behavior: allow-discrete` is set. Keep the non-animated open/closed state correct without it. [MDN overlay][ref-overlay], [MDN transition-behavior][ref-transition-behavior], [MDN @starting-style][ref-starting-style]
+
+## 33. Reserve scrollbar space with `scrollbar-gutter`
+
+Prevent content from shifting sideways when a page or pane crosses the overflow threshold.
 
 ```css
-/* scoped nth-child: count only .item children, ignoring other siblings */
-li:nth-child(-n + 3 of .item) { display: block; }
+html {
+  scrollbar-gutter: stable;
+}
 
-/* zero-specificity default links — trivial to override in components later */
+.panel {
+  max-block-size: 24rem;
+  overflow: auto;
+  scrollbar-gutter: stable both-edges;
+}
+```
+
+Validation: MDN marks `scrollbar-gutter` as Baseline 2024 Newly available and describes it as reserving scrollbar space to prevent unwanted layout changes as content grows. [MDN scrollbar-gutter][ref-scrollbar-gutter]
+
+## 34. Skip offscreen rendering with `content-visibility: auto`
+
+For long feeds, documentation pages, and below-the-fold sections, let the browser skip layout/paint work until content becomes relevant.
+
+```css
+.feed-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+```
+
+Validation: MDN marks `content-visibility` as Baseline 2024 Newly available with some support caveats. The `auto` value turns on layout, style, and paint containment and can skip rendering when the element is not relevant to the user, while keeping skipped content available to find-in-page, tab order, focus, and selection. `contain-intrinsic-size` is Baseline Widely available and supplies the fallback size used for layout under size containment. [MDN content-visibility][ref-content-visibility], [MDN contain-intrinsic-size][ref-contain-intrinsic-size]
+
+## 35. Fix sticky-header anchor jumps with `scroll-margin-top`
+
+When fixed or sticky headers cover in-page anchors, give target sections a scroll margin instead of adding spacer elements.
+
+```css
+:root {
+  --header-offset: 5rem;
+}
+
+[id] {
+  scroll-margin-top: var(--header-offset);
+}
+```
+
+Validation: MDN marks `scroll-margin-top` as Baseline Widely available since April 2021 and defines it as setting the top margin of the scroll snap area used for snapping the box into view. This also helps `#hash` navigation and `scrollIntoView()` land below a sticky header. [MDN scroll-margin-top][ref-scroll-margin-top]
+
+## 36. Contain nested scroll chaining with `overscroll-behavior`
+
+Use this on scrollable panes inside modals, drawers, and mobile sheets so reaching the pane boundary does not accidentally scroll the page behind it.
+
+```css
+.dialog__body {
+  max-block-size: min(70dvb, 40rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+```
+
+Validation: MDN marks `overscroll-behavior` as Limited availability and defines it as controlling what the browser does when reaching the boundary of a scrolling area. Treat it as progressive enhancement: the modal must still work if the rule is ignored. [MDN overscroll-behavior][ref-overscroll-behavior]
+
+## 37. Use perceptual color tokens with `oklch()` and relative colors
+
+`oklch()` makes token ramps easier to reason about because lightness, chroma, and hue are separate axes. Relative color syntax lets you derive variants from a base token.
+
+```css
+:root {
+  --brand: oklch(62% 0.18 265);
+  --brand-hover: oklch(from var(--brand) calc(l - 0.07) c h);
+  --brand-soft: oklch(from var(--brand) 92% calc(c * 0.3) h);
+}
+
+.button {
+  background: var(--brand);
+}
+
+.button:hover {
+  background: var(--brand-hover);
+}
+```
+
+Validation: MDN marks `oklch()` as Baseline Widely available, with some support caveats, and defines it as the cylindrical form of Oklab using lightness, chroma, and hue coordinates. MDN documents relative color syntax as defining a color relative to another color, enabling programmatic lighter, darker, saturated, semi-transparent, or inverted variants. [MDN oklch()][ref-oklch], [MDN relative colors][ref-relative-colors]
+
+## 38. Quarantine vendor CSS with `@import ... layer()`
+
+Import third-party CSS into a known low-priority cascade layer so your components and utilities can override it without specificity wars.
+
+```css
+@layer reset, vendor, base, components, utilities;
+
+@import url("vendor.css") layer(vendor);
+
+@layer components {
+  .button {
+    border-radius: 0.5rem;
+  }
+}
+```
+
+Validation: MDN documents `@import url layer(layer-name)` and says `@import` must be defined before other style declarations, with `@charset` and layer-creating `@layer` statements as exceptions. MDN also documents importing external stylesheets into named cascade layers. [MDN @import][ref-import]
+
+## 39. Use `:dir()` for direction-specific exceptions
+
+Start with logical properties. Use `:dir()` only when the design itself changes for RTL/LTR, such as directional icons or asymmetric decoration.
+
+```css
+.breadcrumb__chevron {
+  inline-size: 1em;
+  block-size: 1em;
+}
+
+:dir(rtl) .breadcrumb__chevron {
+  transform: scaleX(-1);
+}
+```
+
+Validation: MDN marks `:dir()` as Baseline Widely available since December 2023 and defines it as matching elements based on text directionality. [MDN :dir()][ref-dir]
+
+## 40. Avoid custom-element flash with `:defined`
+
+When using web components, style the not-yet-upgraded state explicitly, then reveal the upgraded state.
+
+```css
+fancy-tabs:not(:defined) {
+  display: block;
+  min-block-size: 12rem;
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, currentColor 8%, transparent);
+}
+
+fancy-tabs:defined {
+  min-block-size: auto;
+}
+```
+
+Validation: MDN marks `:defined` as Baseline Widely available and says it matches standard browser-defined elements and custom elements that have been successfully defined. [MDN :defined][ref-defined]
+
+## 41. Expose web-component state with `:state()`
+
+For autonomous custom elements, expose internal states through `CustomStateSet`, then style them from outside without leaking implementation classes.
+
+```css
+toggle-card {
+  display: block;
+  border: 1px solid currentColor;
+  border-radius: 0.75rem;
+}
+
+toggle-card:state(open) {
+  box-shadow: 0 0 0 3px color-mix(in oklab, currentColor 20%, transparent);
+}
+
+toggle-card::part(summary):state(open) {
+  font-weight: 700;
+}
+```
+
+Validation: MDN marks `:state()` as Baseline 2024 Newly available and defines it as matching custom elements that have the specified custom state. MDN also documents use with `:host()` and `::part()` for custom element internals and exposed shadow parts. [MDN :state()][ref-state]
+
+## 42. Name shared elements for View Transitions
+
+For same-document transitions, a stable `view-transition-name` lets an element animate separately from the default page cross-fade.
+
+```css
+@supports (view-transition-name: product-image) {
+  .product-card__image {
+    view-transition-name: product-image;
+  }
+
+  ::view-transition-old(product-image),
+  ::view-transition-new(product-image) {
+    animation-duration: 250ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 1ms;
+  }
+}
+```
+
+Validation: MDN marks `view-transition-name` and `::view-transition-old()` as Baseline 2025 Newly available and says `view-transition-name` specifies the snapshot an element participates in so it can animate separately from the default cross-fade. Cross-document `@view-transition` is still Limited availability, so keep that opt-in progressive. [MDN view-transition-name][ref-view-transition-name], [MDN ::view-transition-old()][ref-view-transition-old], [MDN @view-transition][ref-view-transition-at], [MDN prefers-reduced-motion][ref-reduced-motion]
+
+## 43. Style search and editor ranges with `::highlight()`
+
+Custom highlights let an app highlight arbitrary text ranges without wrapping the text in spans. CSS controls the presentation; JavaScript registers the ranges.
+
+```css
+::highlight(search-match) {
+  background-color: yellow;
+  color: black;
+  text-decoration: underline;
+}
+
+::highlight(active-search-match) {
+  background-color: orange;
+  color: black;
+}
+```
+
+Validation: MDN marks `::highlight()` as Baseline 2026 Newly available and defines it as styling a custom highlight registered with `HighlightRegistry`. MDN also limits supported properties to text-oriented properties such as `color`, `background-color`, text decoration, and `text-shadow`; `background-image` is ignored. [MDN ::highlight()][ref-highlight]
+
+## 44. Adapt CSS to JavaScript availability with `@media (scripting)`
+
+Use the `scripting` media feature for UI that is usable without JavaScript but enhanced when JavaScript is available.
+
+```css
+.carousel__controls {
+  display: none;
+}
+
+@media (scripting: enabled) {
+  .carousel__controls {
+    display: flex;
+  }
+}
+
+@media (scripting: none) {
+  .carousel {
+    overflow-x: auto;
+  }
+}
+```
+
+Validation: MDN marks the `scripting` media feature as Baseline 2023 Newly available and says it tests whether scripting, such as JavaScript, is available. [MDN scripting media feature][ref-scripting]
+
+## 45. Use scroll-state container queries for scroll-aware UI
+
+Scroll-state queries let CSS react to whether a container can scroll, was scrolled in a direction, is snapped, or is sticky-stuck.
+
+```css
+html {
+  container-type: scroll-state;
+  container-name: page-scroller;
+}
+
+.back-to-top {
+  position: fixed;
+  inset-block-end: 1rem;
+  inset-inline-end: 1rem;
+  translate: 120% 0;
+  transition: translate 180ms ease;
+}
+
+@container page-scroller scroll-state(scrollable: top) {
+  .back-to-top {
+    translate: 0 0;
+  }
+}
+```
+
+Validation: MDN documents container scroll-state queries as a type of container query that applies styles based on scroll state, including `scrollable`, `scrolled`, `snapped`, and `stuck` descriptors. Because scroll-state queries are newer and interaction-heavy, keep a usable static fallback and test across your support matrix. [MDN scroll-state queries][ref-scroll-state-queries]
+
+## 46. Snap fluid values to a rhythm with `round()`
+
+When a fluid value produces awkward fractional spacing, round it to your spacing step.
+
+```css
+:root {
+  --space-step: 0.25rem;
+}
+
+.card {
+  padding: round(up, clamp(1rem, 3cqi, 2rem), var(--space-step));
+}
+```
+
+Validation: MDN marks `round()` as Baseline 2024 Newly available and defines it as returning a rounded number based on a selected rounding strategy and interval. [MDN round()][ref-round]
+
+## 47. Use `line-clamp` as an enhancement, not as content policy
+
+Line clamping is useful for cards, previews, and teasers. Do not use it as the only way to access essential content.
+
+```css
+.excerpt {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+@supports (line-clamp: 3) {
+  .excerpt {
+    display: block;
+    line-clamp: 3;
+  }
+}
+```
+
+Validation: MDN marks unprefixed `line-clamp` as Limited availability. MDN also documents the legacy `-webkit-line-clamp` co-dependency with `display: -webkit-box` or `-webkit-inline-box` and `-webkit-box-orient: vertical` as fully specified behavior that remains supported. [MDN line-clamp][ref-line-clamp]
+
+## 48. Tune fallback font metrics with `size-adjust`
+
+Instead of relying on a stale local brand font, tune a fallback face so its metrics better approximate your web font while the real font loads.
+
+```css
+@font-face {
+  font-family: "Brand";
+  src: url("/fonts/brand.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Brand Fallback";
+  src: local("Arial");
+  size-adjust: 103%;
+}
+
+body {
+  font-family: "Brand", "Brand Fallback", system-ui, sans-serif;
+}
+```
+
+Validation: MDN marks `size-adjust` as Baseline Widely available since September 2023 and defines it as a multiplier for glyph outlines and font metrics to harmonize the rendered design of different fonts. More exact descriptors such as `ascent-override` remain Limited availability, so verify before relying on them. [MDN size-adjust][ref-size-adjust], [MDN ascent-override][ref-ascent-override]
+
+## 49. Future/lab CSS to watch, not rely on yet
+
+These are genuinely cool, but not baseline-safe. Keep them in experiments, demos, or progressive enhancements until your target browsers support them.
+
+```css
+/* Conditional single-value logic. Always write a fallback first. */
+.card {
+  padding: 1rem;
+  padding: if(style(--density: compact): 0.5rem; else: 1rem);
+}
+
+/* Custom CSS functions: powerful, but experimental/limited. */
+@function --alpha(--color <color>, --amount <number>) returns <color> {
+  result: oklch(from var(--color) l c h / var(--amount));
+}
+
+/* Sibling math: useful for stagger/index effects, still limited. */
+.gallery > * {
+  --delay: calc(sibling-index() * 40ms);
+  animation-delay: var(--delay);
+}
+
+/* Clip without creating a scroll container; extend the clip edge only where supported. */
+.avatar {
+  overflow: clip;
+}
+
+@supports (overflow-clip-margin: 1rem) {
+  .avatar {
+    overflow-clip-margin: 0.5rem;
+  }
+}
+```
+
+Validation: MDN marks `if()`, `@function`, `sibling-index()`, `sibling-count()`, and `overflow-clip-margin` as Limited availability. `overflow` itself is Baseline Widely available, but `overflow-clip-margin` is not; gate the extra clip-edge polish behind `@supports`. [MDN if()][ref-if], [MDN @function][ref-function], [MDN sibling-index()][ref-sibling-index], [MDN sibling-count()][ref-sibling-count], [MDN overflow][ref-overflow], [MDN overflow-clip-margin][ref-overflow-clip-margin]
+
+
+# Retire or modernize older tips
+
+## Replace padding-hack ratio boxes with `aspect-ratio`
+
+```css
+.embed {
+  aspect-ratio: 16 / 9;
+}
+```
+
+Why: `aspect-ratio` directly expresses the intended ratio on the element. The old `height: 0; padding-bottom: ...` trick remains a legacy fallback only. [MDN aspect-ratio][ref-aspect-ratio]
+
+## Replace max-height disclosure with grid-row disclosure where possible
+
+Use the grid-row technique in Pattern 17 for unknown-height content. Reserve `max-height` for cases where the max is truly bounded and tested. [MDN max-height][ref-max-height], [MDN CSS grid][ref-grid]
+
+## Replace `space-between` card gutters with Grid `auto-fit`
+
+Use Pattern 19 for responsive cards. `justify-content: space-between` distributes leftover main-axis space; in wrapping galleries, this can make incomplete rows look detached. [MDN justify-content][ref-justify-content], [MDN repeat()][ref-repeat]
+
+## Choose `unset` vs `revert` by reset intent
+
+```css
+button.clean {
+  all: unset;
+  display: inline-flex;
+}
+
+button.native {
+  all: revert;
+}
+```
+
+Why: `unset` means inherited properties inherit and non-inherited properties become initial; `revert` rolls back toward the previous cascade origin. [MDN all][ref-all]
+
+## Do not `local()` strict brand fonts by default
+
+Use self-hosted `.woff2`, font metrics strategy, and `font-display` instead. Use `local()` only when local substitution is acceptable. [MDN @font-face src][ref-font-src], [MDN font-display][ref-font-display]
+
+## Scope the owl selector
+
+```css
+.flow > * + * {
+  margin-block-start: 1.5em;
+}
+```
+
+Why: the global version can affect widgets, grid/flex children, and embedded content. Scoping gives the spacing behavior only where intended. [MDN logical properties][ref-logical]
+
+## Use masks for monochrome recolorable icons
+
+Use `mask` plus `currentColor` for single-color icons. Keep inline SVG or image backgrounds for multicolor art. [MDN mask][ref-mask]
+
+## Use `:where()` for defaults that should lose easily
+
+```css
 :where(a[href]:not([class])) {
-  color: #008000;
+  color: LinkText;
   text-decoration: underline;
 }
 ```
 
+Why: zero specificity makes component overrides straightforward. [MDN :where][ref-where]
 
+---
+
+# Validation matrix
+
+| Claim / pattern | Status | Reference |
+|---|---:|---|
+| Baseline is compatibility signal, not QA | Validated | [MDN Baseline][ref-baseline] |
+| `box-sizing: border-box` includes padding/border in sizing | Validated | [MDN box-sizing][ref-box-sizing] |
+| `all` excludes `unicode-bidi`, `direction`, custom props | Validated | [MDN all][ref-all] |
+| `:not()` matches elements not matching selector list | Validated | [MDN :not][ref-not] |
+| `@font-face src local()` checks local names; privacy constraints exist | Validated | [MDN @font-face src][ref-font-src] |
+| `font-display: swap` has tiny block period and infinite swap period | Validated | [MDN font-display][ref-font-display] |
+| Unitless line-height is recommended for inheritance | Validated | [MDN line-height][ref-line-height] |
+| `:focus-visible` is preferred for keyboard-visible focus styling | Validated | [MDN :focus-visible][ref-focus-visible] |
+| Dynamic viewport units respond to browser UI changes | Validated | [MDN viewport units][ref-viewport-units] |
+| `aspect-ratio` defines preferred width/height ratio | Validated | [MDN aspect-ratio][ref-aspect-ratio] |
+| `object-fit: cover` preserves ratio while filling/clipping | Validated | [MDN object-fit][ref-object-fit] |
+| Generated `content` is generated/replaced content | Validated | [MDN content][ref-content] |
+| `:nth-child(-n + 3)` selects first three children | Validated | [MDN :nth-child][ref-nth-child] |
+| `:nth-child(... of selector)` filters counted siblings | Validated | [MDN nth-child of selector][ref-nth-child-of] |
+| `table-layout: fixed` requires table width to matter | Validated | [MDN table-layout][ref-table-layout] |
+| `gap` works for grid/flex/multicol layouts | Validated | [MDN gap][ref-gap] |
+| `:empty` ignores comments but not whitespace text nodes | Validated | [MDN :empty][ref-empty] |
+| `pointer-events: none` does not prevent keyboard focus | Validated | [MDN pointer-events][ref-pointer-events] |
+| `:has()` is Baseline Widely available | Validated | [MDN :has][ref-has] |
+| Container queries are Baseline Widely available | Validated | [MDN container queries][ref-container-queries] |
+| Native CSS nesting is browser parsed; support should be checked | Validated | [MDN CSS nesting][ref-nesting], [Can I use CSS nesting][ref-caniuse-nesting] |
+| `@layer` layer order can outrank selector specificity | Validated | [MDN @layer][ref-layer] |
+| `subgrid` is Baseline Widely available | Validated | [MDN subgrid][ref-subgrid] |
+| `color-mix()` is Baseline Widely available | Validated | [MDN color-mix()][ref-color-mix] |
+| Logical properties map to writing mode/direction | Validated | [MDN logical properties][ref-logical] |
+| `clamp()` sets min/preferred/max | Validated | [MDN clamp()][ref-clamp] |
+| `@supports` is feature-query CSS | Validated | [MDN @supports][ref-supports] |
+| `text-wrap` is Baseline 2024 Newly available | Validated | [MDN text-wrap][ref-text-wrap] |
+| `light-dark()` is Baseline 2024 Newly available | Validated | [MDN light-dark()][ref-light-dark] |
+| `@scope` is Baseline 2025 Newly available | Validated | [MDN @scope][ref-scope] |
+| `@starting-style` is Baseline 2024 Newly available | Validated | [MDN @starting-style][ref-starting-style] |
+| Core anchor positioning properties are Baseline 2026 Newly available | Updated from uploaded skill | [MDN anchor-name][ref-anchor-name], [MDN position-area][ref-position-area], [MDN position-try-fallbacks][ref-position-try-fallbacks] |
+| `contrast-color()` is Baseline 2026 Newly available and returns black/white | Validated | [MDN contrast-color()][ref-contrast-color] |
+| `accent-color` is Limited availability | Validated | [MDN accent-color][ref-accent-color] |
+| Scroll-driven `animation-timeline` is Limited availability | Validated | [MDN animation-timeline][ref-animation-timeline] |
+| `field-sizing` is Baseline 2026 Newly available | Updated from uploaded skill | [MDN field-sizing][ref-field-sizing] |
+| `interpolate-size` / `calc-size()` are not Baseline | Validated | [MDN interpolate-size][ref-interpolate-size], [MDN calc-size][ref-calc-size] |
+| `transition-behavior` is for discrete transitions | Validated | [MDN transition-behavior][ref-transition-behavior] |
+| `mask` supports CSS masking for icons | Validated | [MDN mask][ref-mask] |
+| `:where()` has zero specificity | Validated | [MDN :where][ref-where] |
+| `@property` is Baseline 2024 Newly available and registers typed custom properties | Added | [MDN @property][ref-property] |
+| Container query units such as `cqi`, `cqb`, `cqmin`, and `cqmax` are relative to a query container | Added | [MDN container query units][ref-container-query-units] |
+| `:user-valid` / `:user-invalid` are Baseline Widely available and match after user interaction | Added | [MDN :user-valid][ref-user-valid], [MDN :user-invalid][ref-user-invalid] |
+| `:popover-open` is Baseline 2024 Newly available; `::backdrop` is Baseline Widely available | Added | [MDN :popover-open][ref-popover-open], [MDN ::backdrop][ref-backdrop] |
+| `overlay` is Limited availability and only relevant for top-layer discrete transitions | Added | [MDN overlay][ref-overlay] |
+| `scrollbar-gutter` is Baseline 2024 Newly available | Added | [MDN scrollbar-gutter][ref-scrollbar-gutter] |
+| `content-visibility` is Baseline 2024 Newly available; `contain-intrinsic-size` is Baseline Widely available | Added | [MDN content-visibility][ref-content-visibility], [MDN contain-intrinsic-size][ref-contain-intrinsic-size] |
+| `scroll-margin-top` is Baseline Widely available | Added | [MDN scroll-margin-top][ref-scroll-margin-top] |
+| `overscroll-behavior` is Limited availability | Added | [MDN overscroll-behavior][ref-overscroll-behavior] |
+| `oklch()` is Baseline Widely available; relative color syntax derives colors from another color | Added | [MDN oklch()][ref-oklch], [MDN relative colors][ref-relative-colors] |
+| `@import ... layer()` imports styles into cascade layers and must appear before normal declarations | Added | [MDN @import][ref-import] |
+| `:dir()` is Baseline Widely available | Added | [MDN :dir()][ref-dir] |
+| `:defined` is Baseline Widely available | Added | [MDN :defined][ref-defined] |
+| `:state()` is Baseline 2024 Newly available for custom element states | Added | [MDN :state()][ref-state] |
+| `view-transition-name` and `::view-transition-old()` are Baseline 2025 Newly available; cross-document `@view-transition` is Limited availability | Added | [MDN view-transition-name][ref-view-transition-name], [MDN ::view-transition-old()][ref-view-transition-old], [MDN @view-transition][ref-view-transition-at] |
+| `::highlight()` is Baseline 2026 Newly available and supports only a limited text-oriented property set | Added | [MDN ::highlight()][ref-highlight] |
+| `scripting` media feature is Baseline 2023 Newly available | Added | [MDN scripting][ref-scripting] |
+| Container scroll-state queries are documented for `scrollable`, `scrolled`, `snapped`, and `stuck` states | Added | [MDN scroll-state queries][ref-scroll-state-queries] |
+| `round()` is Baseline 2024 Newly available | Added | [MDN round()][ref-round] |
+| `line-clamp` is Limited availability; legacy `-webkit-line-clamp` behavior is fully specified | Added | [MDN line-clamp][ref-line-clamp] |
+| `size-adjust` is Baseline Widely available; `ascent-override` is Limited availability | Added | [MDN size-adjust][ref-size-adjust], [MDN ascent-override][ref-ascent-override] |
+| `if()`, `@function`, `sibling-index()`, `sibling-count()`, and `overflow-clip-margin` are Limited availability | Added | [MDN if()][ref-if], [MDN @function][ref-function], [MDN sibling-index()][ref-sibling-index], [MDN sibling-count()][ref-sibling-count], [MDN overflow-clip-margin][ref-overflow-clip-margin] |
+
+---
+
+# Reference index
+
+[ref-baseline]: https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility
+[ref-supports]: https://developer.mozilla.org/en-US/docs/Web/CSS/@supports
+[ref-box-sizing]: https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing
+[ref-all]: https://developer.mozilla.org/en-US/docs/Web/CSS/all
+[ref-not]: https://developer.mozilla.org/en-US/docs/Web/CSS/:not
+[ref-font-src]: https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/src
+[ref-font-display]: https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display
+[ref-line-height]: https://developer.mozilla.org/en-US/docs/Web/CSS/line-height
+[ref-focus-visible]: https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible
+[ref-viewport-units]: https://developer.mozilla.org/en-US/docs/Web/CSS/length#relative_length_units_based_on_viewport
+[ref-place-items]: https://developer.mozilla.org/en-US/docs/Web/CSS/place-items
+[ref-flex-align]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Aligning_items_in_a_flex_container
+[ref-aspect-ratio]: https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio
+[ref-object-fit]: https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
+[ref-content]: https://developer.mozilla.org/en-US/docs/Web/CSS/content
+[ref-is]: https://developer.mozilla.org/en-US/docs/Web/CSS/:is
+[ref-where]: https://developer.mozilla.org/en-US/docs/Web/CSS/:where
+[ref-nth-child]: https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-child
+[ref-nth-child-of]: https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-child#the_of_selector_syntax
+[ref-mask]: https://developer.mozilla.org/en-US/docs/Web/CSS/mask
+[ref-margin-inline]: https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline
+[ref-padding-block]: https://developer.mozilla.org/en-US/docs/Web/CSS/padding-block
+[ref-logical]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values
+[ref-max-height]: https://developer.mozilla.org/en-US/docs/Web/CSS/max-height
+[ref-overflow]: https://developer.mozilla.org/en-US/docs/Web/CSS/overflow
+[ref-grid]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout
+[ref-grid-template-columns]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+[ref-table-layout]: https://developer.mozilla.org/en-US/docs/Web/CSS/table-layout
+[ref-repeat]: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat
+[ref-minmax]: https://developer.mozilla.org/en-US/docs/Web/CSS/minmax
+[ref-gap]: https://developer.mozilla.org/en-US/docs/Web/CSS/gap
+[ref-empty]: https://developer.mozilla.org/en-US/docs/Web/CSS/:empty
+[ref-pointer-events]: https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
+[ref-clamp]: https://developer.mozilla.org/en-US/docs/Web/CSS/clamp
+[ref-has]: https://developer.mozilla.org/en-US/docs/Web/CSS/:has
+[ref-container-queries]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries
+[ref-container-at]: https://developer.mozilla.org/en-US/docs/Web/CSS/@container
+[ref-nesting]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_nesting/Using_CSS_nesting
+[ref-caniuse-nesting]: https://caniuse.com/css-nesting
+[ref-layer]: https://developer.mozilla.org/en-US/docs/Web/CSS/@layer
+[ref-subgrid]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout/Subgrid
+[ref-color-mix]: https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/color-mix
+[ref-text-wrap]: https://developer.mozilla.org/en-US/docs/Web/CSS/text-wrap
+[ref-light-dark]: https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/light-dark
+[ref-scope]: https://developer.mozilla.org/en-US/docs/Web/CSS/@scope
+[ref-starting-style]: https://developer.mozilla.org/en-US/docs/Web/CSS/@starting-style
+[ref-anchor-module]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_anchor_positioning
+[ref-anchor-name]: https://developer.mozilla.org/en-US/docs/Web/CSS/anchor-name
+[ref-position-area]: https://developer.mozilla.org/en-US/docs/Web/CSS/position-area
+[ref-position-try-fallbacks]: https://developer.mozilla.org/en-US/docs/Web/CSS/position-try-fallbacks
+[ref-contrast-color]: https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/contrast-color
+[ref-accent-color]: https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color
+[ref-scroll-driven]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_scroll-driven_animations
+[ref-animation-timeline]: https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline
+[ref-field-sizing]: https://developer.mozilla.org/en-US/docs/Web/CSS/field-sizing
+[ref-interpolate-size]: https://developer.mozilla.org/en-US/docs/Web/CSS/interpolate-size
+[ref-calc-size]: https://developer.mozilla.org/en-US/docs/Web/CSS/calc-size
+[ref-chrome-interpolate]: https://developer.chrome.com/docs/css-ui/animate-to-height-auto
+[ref-transition-behavior]: https://developer.mozilla.org/en-US/docs/Web/CSS/transition-behavior
+[ref-justify-content]: https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content
+[ref-property]: https://developer.mozilla.org/en-US/docs/Web/CSS/@property
+[ref-container-query-units]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_containment/Container_queries#container_query_length_units
+[ref-user-invalid]: https://developer.mozilla.org/en-US/docs/Web/CSS/:user-invalid
+[ref-user-valid]: https://developer.mozilla.org/en-US/docs/Web/CSS/:user-valid
+[ref-popover-open]: https://developer.mozilla.org/en-US/docs/Web/CSS/:popover-open
+[ref-backdrop]: https://developer.mozilla.org/en-US/docs/Web/CSS/::backdrop
+[ref-overlay]: https://developer.mozilla.org/en-US/docs/Web/CSS/overlay
+[ref-scrollbar-gutter]: https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-gutter
+[ref-content-visibility]: https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility
+[ref-contain-intrinsic-size]: https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-size
+[ref-line-clamp]: https://developer.mozilla.org/en-US/docs/Web/CSS/line-clamp
+[ref-overflow-clip-margin]: https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-clip-margin
+[ref-scroll-margin-top]: https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-margin-top
+[ref-overscroll-behavior]: https://developer.mozilla.org/en-US/docs/Web/CSS/overscroll-behavior
+[ref-size-adjust]: https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/size-adjust
+[ref-ascent-override]: https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/ascent-override
+[ref-import]: https://developer.mozilla.org/en-US/docs/Web/CSS/@import
+[ref-dir]: https://developer.mozilla.org/en-US/docs/Web/CSS/:dir
+[ref-defined]: https://developer.mozilla.org/en-US/docs/Web/CSS/:defined
+[ref-state]: https://developer.mozilla.org/en-US/docs/Web/CSS/:state
+[ref-view-transitions]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_view_transitions
+[ref-view-transition-name]: https://developer.mozilla.org/en-US/docs/Web/CSS/view-transition-name
+[ref-view-transition-old]: https://developer.mozilla.org/en-US/docs/Web/CSS/::view-transition-old
+[ref-view-transition-at]: https://developer.mozilla.org/en-US/docs/Web/CSS/@view-transition
+[ref-oklch]: https://developer.mozilla.org/en-US/docs/Web/CSS/color_value/oklch
+[ref-relative-colors]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_colors/Relative_colors
+[ref-env]: https://developer.mozilla.org/en-US/docs/Web/CSS/env
+[ref-scripting]: https://developer.mozilla.org/en-US/docs/Web/CSS/@media/scripting
+[ref-reduced-motion]: https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion
+[ref-round]: https://developer.mozilla.org/en-US/docs/Web/CSS/round
+[ref-if]: https://developer.mozilla.org/en-US/docs/Web/CSS/if
+[ref-function]: https://developer.mozilla.org/en-US/docs/Web/CSS/@function
+[ref-sibling-index]: https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-index
+[ref-sibling-count]: https://developer.mozilla.org/en-US/docs/Web/CSS/sibling-count
+[ref-highlight]: https://developer.mozilla.org/en-US/docs/Web/CSS/::highlight
+[ref-scroll-state-queries]: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_conditional_rules/Container_scroll-state_queries

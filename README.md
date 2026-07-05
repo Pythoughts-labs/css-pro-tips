@@ -34,7 +34,7 @@ every mouse click. This skill gives the agent **one curated file** that:
 
 Every status claim was verified against MDN's per-feature Baseline data and the
 [`web-platform-dx/web-features`](https://github.com/web-platform-dx/web-features) dataset
-(last validated **June 2026**). Baseline is a *browser-compatibility* signal only — the
+(last validated **July 2026**). Baseline is a *browser-compatibility* signal only — the
 skill still tells the agent to test accessibility, motion preferences, keyboard behavior,
 and contrast separately.
 
@@ -46,8 +46,9 @@ A single self-contained skill: [`SKILL.md`](./SKILL.md) (skill name: `css-protip
 |---------|--------|
 | **Evergreen tips** | Resets, `box-sizing` inheritance, `:not()` navigation, `aspect-ratio`, `:is()`, intrinsic sizing, focus styling, mobile form fixes |
 | **Baseline 🟢 Widely** | `:has()`, `@container`, native nesting, `@layer`, `subgrid`, `color-mix()`, logical properties, `:focus-visible`, `clamp()` |
-| **Baseline 🟡 Newly** | `text-wrap`, `light-dark()`, `@scope`, `@starting-style`, `contrast-color()` |
-| **🔴 Limited** | `accent-color`, scroll-driven animations, `field-sizing`, anchor positioning — all with `@supports` gates |
+| **Baseline 🟡 Newly** | `text-wrap`, `light-dark()`, `@scope`, `@starting-style`, `contrast-color()`, anchor positioning, `field-sizing` |
+| **🔴 Limited** | `accent-color`, scroll-driven animations, `interpolate-size`, `calc-size()`, `transition-behavior` — all with `@supports` gates |
+| **Modern additions** | `@property`, container query units, popovers, top-layer transitions, `scrollbar-gutter`, `content-visibility`, View Transitions, custom highlights, scroll-state queries |
 | **Modernize older tips** | When to retire the padding-hack ratio box, `max-height` sliders, `* + *` owl, `local()` fonts |
 
 ---
