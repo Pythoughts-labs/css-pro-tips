@@ -149,7 +149,7 @@ ln -sf "$(pwd)/node_modules/css-pro-tips/SKILL.md" ~/.codex/skills/css-protips/S
 
 ## Verification
 
-- Current package version: [`1.1.0`](./package.json)
+- Current package version: [`1.1.1`](./package.json)
 - Last documented validation window: July 2026
 - Compatibility model: [MDN Baseline](https://developer.mozilla.org/en-US/docs/Glossary/Baseline/Compatibility)
 - Change history: [`CHANGELOG.md`](./CHANGELOG.md)
